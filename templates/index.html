@@ -39,7 +39,7 @@
 
 <!--
   -- If there are any warnings or other messages from a prior action,
-  -- they appear above the rest of the content, just until the next 
+  -- they appear above the rest of the content, just until the next
   -- action.
   -->
 
@@ -64,19 +64,22 @@
      border: 1px solid #ccc; width: 12em" >
   <script type="text/javascript">
   $(function() {
-  $('input[name="daterange"]').daterangepicker(
-    {    ranges: {
-           'Today': [moment(), moment()],
-           'Tomorrow':[moment().add(1, 'days'),
-                       moment().add(1, 'days')], 
-           'This week':[moment(), moment().endOf('week')],
-           'Next week':[moment().add(7, 'days').startOf('week'),
-                        moment().add(7, 'days').endOf('week')],
-           'This month':[moment(), moment().endOf('month')],
-           'Within two weeks':[moment(),moment().add(15, 'days')]
-        }}
-       );
+    $('input[name="daterange"]').daterangepicker({
+      timePicker: true,
+      timePickerIncrement: 30,
+      locale: {
+        format: 'MM/DD/YYYY h:mm A'
+      },
+      ranges: {
+        'Today': [moment(), moment()],
+        'Tomorrow':[moment().add(1, 'days'), moment().add(1, 'days')],
+        'This week':[moment(), moment().endOf('week')],
+        'Next week':[moment().add(7, 'days').startOf('week'), moment().add(7, 'days').endOf('week')],
+        'This month':[moment(), moment().endOf('month')],
+        'Within two weeks':[moment(),moment().add(15, 'days')]
+      }
     });
+  });
   </script>
 
 <br /><input type="submit" value="Choose" />
@@ -86,7 +89,7 @@
     Show the calendar list (if we have it).  This will need to be turned into
     a form from which calendars can be picked. Up to three entries are
     shown in each row (but the order is across then down; I would
-    prefer down then across). 
+    prefer down then across).
     -->
 {% if g.calendars is defined  %}
   <div class="row">
@@ -100,7 +103,7 @@
   {% endfor %}
   </div>
 {% endif %}
-    
+
 
   </div>  <!-- container (for bootstrap) -->
   </body> </html>
