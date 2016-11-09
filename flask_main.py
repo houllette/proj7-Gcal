@@ -200,8 +200,13 @@ def setrange():
     daterange_parts = daterange.split()
     flask.session['begin_date'] = interpret_date(daterange_parts[0])
     flask.session['end_date'] = interpret_date(daterange_parts[4])
+
+    first_time_selection = daterange_parts[1]+daterange_parts[2].lower()
+    second_time_selection = daterange_parts[5]+daterange_parts[6].lower()
+    flask.session["begin_time"] = interpret_time(first_time_selection)
+    flask.session["end_time"] = interpret_time(second_time_selection)
     app.logger.debug("Setrange parsed {} - {}  dates as {} - {}".format(
-      daterange_parts[0], daterange_parts[1],
+      daterange_parts[0], daterange_parts[4],
       flask.session['begin_date'], flask.session['end_date']))
     return flask.redirect(flask.url_for("choose"))
 
