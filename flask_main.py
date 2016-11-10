@@ -199,15 +199,16 @@ def setrange():
     flask.session['daterange'] = daterange
     daterange_parts = daterange.split()
     flask.session['begin_date'] = interpret_date(daterange_parts[0])
-    flask.session['end_date'] = interpret_date(daterange_parts[4])
+    flask.session['end_date'] = interpret_date(daterange_parts[2])
 
-    first_time_selection = daterange_parts[1]+daterange_parts[2].lower()
-    second_time_selection = daterange_parts[5]+daterange_parts[6].lower()
-    flask.session["begin_time"] = interpret_time(first_time_selection)
-    flask.session["end_time"] = interpret_time(second_time_selection)
+    begin_time = request.form.get('begin_time')
+    end_time = request.form.get('end_time')
+    app.logger.debug(begin_time + " "+ end_time)
+    flask.session["begin_time"] = interpret_time(begin_time)
+    flask.session["end_time"] = interpret_time(end_time)
     app.logger.debug("Setrange parsed {} - {}  dates as {} - {}".format(
-      daterange_parts[0], daterange_parts[4],
-      flask.session['begin_date'], flask.session['end_date']))
+      daterange_parts[0], daterange_parts[2],
+      flask.session['begin_time'], flask.session['end_time']))
     return flask.redirect(flask.url_for("choose"))
 
 ####
@@ -243,6 +244,8 @@ def interpret_time( text ):
     """
     app.logger.debug("Decoding time '{}'".format(text))
     time_formats = ["ha", "h:mma",  "h:mm a", "H:mm"]
+    if text == '':
+        text = '12:00am' #just to catch an empty request
     try:
         as_arrow = arrow.get(text, time_formats).replace(tzinfo=tz.tzlocal())
         as_arrow = as_arrow.replace(year=2016) #HACK see below

@@ -61,15 +61,13 @@
     {% endif %}
      class="pull-down"
      style="background: #fff; cursor: pointer; padding: 5px 10px;
-     border: 1px solid #ccc; width: 12em" >
+     border: 1px solid #ccc; width: 13em" >
+  <br />
+  <input type="time" name="begin_time">
+  <input type="time" name="end_time">
   <script type="text/javascript">
   $(function() {
     $('input[name="daterange"]').daterangepicker({
-      timePicker: true,
-      timePickerIncrement: 30,
-      locale: {
-        format: 'MM/DD/YYYY h:mm A'
-      },
       ranges: {
         'Today': [moment(), moment()],
         'Tomorrow':[moment().add(1, 'days'), moment().add(1, 'days')],
@@ -91,6 +89,7 @@
     shown in each row (but the order is across then down; I would
     prefer down then across).
     -->
+<form>
 {% if g.calendars is defined  %}
   <div class="row">
   {% for cal in g.calendars if cal.selected %}
@@ -103,6 +102,7 @@
   {% endfor %}
   </div>
 {% endif %}
+</form>
 
 
   </div>  <!-- container (for bootstrap) -->
