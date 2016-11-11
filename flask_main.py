@@ -211,6 +211,20 @@ def setrange():
       flask.session['begin_time'], flask.session['end_time']))
     return flask.redirect(flask.url_for("choose"))
 
+@app.route('/setcalendar', methods=['POST'])
+def setcalendar():
+    selected_calendars = request.form.getlist("calendars")
+    app.logger.debug(str(selected_calendars))
+    credentials = valid_credentials()
+    if not credentials:
+      app.logger.debug("Redirecting to authorization")
+      return flask.redirect(flask.url_for('oauth2callback'))
+
+    gcal_service = get_gcal_service(credentials)
+    app.logger.debug("Returned from get_gcal_service")
+    flask.g.events = list_events(gcal_service, selected_calendars)
+    return render_template('index.html')
+
 ####
 #
 #   Initialize session variables
@@ -316,7 +330,6 @@ def list_calendars(service):
         selected = ("selected" in cal) and cal["selected"]
         primary = ("primary" in cal) and cal["primary"]
 
-
         result.append(
           { "kind": kind,
             "id": id,
@@ -326,6 +339,46 @@ def list_calendars(service):
             })
     return sorted(result, key=cal_sort_key)
 
+def list_events(service, selected_calendars):
+    """
+    Given a google 'service' object and list of selected calendars, return a list of
+    events from the selected calendars within the submitted date range.
+    Each event is represented by a dict.
+    """
+    app.logger.debug("Entering list_events")
+    page_token = None
+    result = [ ]
+    for cal_id in selected_calendars:
+        while True:
+          events_list = service.events().list(calendarId=cal_id, pageToken=page_token, timeMin=flask.session["begin_date"], timeMax=flask.session["end_date"]).execute()
+          for event in events_list["items"]:
+            if "summary" in event:
+                if 'transparency' not in event:
+                    if 'description' in event:
+                        desc = event['description']
+                    else:
+                        desc = '(no description)'
+
+                    if 'date' in event['start']:
+                        start_date = event['start']['date']
+                    else:
+                        start_date = event['start']['dateTime']
+
+                    if 'date' in event['end']:
+                        end_date = event['end']['date']
+                    else:
+                        end_date = event['end']['dateTime']
+
+                    result.append({
+                    'summary': event['summary'],
+                    'desc': desc,
+                    'start_date': start_date,
+                    'end_date': end_date
+                    })
+          page_token = events_list.get("nextPageToken")
+          if not page_token:
+            break
+    return result
 
 def cal_sort_key( cal ):
     """
