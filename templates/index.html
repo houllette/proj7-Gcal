@@ -16,16 +16,8 @@
   <body>
     <div class="container">
       <h1>Busy times</h1>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul class=flashes>
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-      <h2>Date range</h2>
+      <br />
+      <h3>Date range</h3>
       <form action="/setrange" method="post">
         <input type="text" name="daterange" size="12"
           {% if session.daterange is defined %}
@@ -34,9 +26,19 @@
            class="pull-down"
            style="background: #fff; cursor: pointer; padding: 5px 10px;
            border: 1px solid #ccc; width: 13em" >
+        <br /><br />
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+        Start Time:&nbsp;<input type="time" name="begin_time">
         <br />
-        <input type="time" name="begin_time">
-        <input type="time" name="end_time">
+        End Time:&nbsp;&nbsp;&nbsp;<input type="time" name="end_time">
         <script type="text/javascript">
         $(function() {
           $('input[name="daterange"]').daterangepicker({
@@ -51,7 +53,7 @@
           });
         });
         </script>
-        <br />
+        <br /><br />
         <input type="submit" value="Choose Daterange and Timerange" />
       </form>
 
@@ -75,6 +77,7 @@
                {% endif %}
         {% endfor %}
         </div>
+        <br /><br />
         <input type="submit" value="Choose Applicable Calendars">
       </form>
       {% endif %}
@@ -88,7 +91,7 @@
           {% if loop.index is divisibleby 3 %}
         </div>
         <div class="row">
-               {% endif %}
+          {% endif %}
         {% endfor %}
         </div>
       {% endif %}
