@@ -222,7 +222,7 @@ def setcalendar():
 
     gcal_service = get_gcal_service(credentials)
     app.logger.debug("Returned from get_gcal_service")
-    flask.g.events = list_events(gcal_service, selected_calendars)
+    flask.g.events = conflicting_events(list_events(gcal_service, selected_calendars))
     return render_template('index.html')
 
 ####
@@ -360,12 +360,12 @@ def list_events(service, selected_calendars):
                         desc = '(no description)'
 
                     if 'date' in event['start']:
-                        start_date = event['start']['date']
+                        start_date = "ALL DAY"
                     else:
                         start_date = event['start']['dateTime']
 
                     if 'date' in event['end']:
-                        end_date = event['end']['date']
+                        end_date = "ALL DAY"
                     else:
                         end_date = event['end']['dateTime']
 
@@ -378,6 +378,7 @@ def list_events(service, selected_calendars):
           page_token = events_list.get("nextPageToken")
           if not page_token:
             break
+    app.logger.debug(str(result))
     return result
 
 def cal_sort_key( cal ):
@@ -396,6 +397,18 @@ def cal_sort_key( cal ):
        primary_key = "X"
     return (primary_key, selected_key, cal["summary"])
 
+def conflicting_events(events):
+    '''
+    Given a list of events, checks against user inputted time frame
+    and returns list of events that fall between the requested time frame
+    '''
+    conflict = [ ]
+    for event in events:
+        if event['start_date'] == "ALL DAY":
+            conflict.append(event)
+        else:
+            #do the conflict stuff here
+    return conflict
 
 #################
 #

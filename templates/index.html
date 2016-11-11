@@ -79,6 +79,20 @@
       </form>
       {% endif %}
 
+      {% if g.events is defined  %}
+        <div class="row">
+        {% for event in g.events %}
+          <div class="col-xs-4">
+      	     {{ event.summary }} : {{ event.desc }}
+          </div>
+          {% if loop.index is divisibleby 3 %}
+        </div>
+        <div class="row">
+               {% endif %}
+        {% endfor %}
+        </div>
+      {% endif %}
+
     </div>  <!-- container (for bootstrap) -->
   </body>
 </html>
