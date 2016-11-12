@@ -200,18 +200,20 @@ def setrange():
     flask.session['begin_date'] = interpret_date(daterange_parts[0])
     flask.session['end_date'] = interpret_date(daterange_parts[2])
 
-    begin_time = request.form.get('begin_time')
-    end_time = request.form.get('end_time')
-    app.logger.debug(begin_time + " "+ end_time)
-    flask.session["begin_time"] = interpret_time(begin_time)
-    flask.session["end_time"] = interpret_time(end_time)
+    begin_time = interpret_time(request.form.get('begin_time'))
+    end_time = interpret_time(request.form.get('end_time'))
+    if begin_time < end_time:
+        flask.session["begin_time"] = begin_time
+        flask.session["end_time"] = end_time
+    else:
+        flask.session["begin_time"] = end_time
+        flask.session["end_time"] = begin_time
     flask.flash("Request time has been set to between '{}' and '{}'".format(flask.session['begin_time'].split('T')[1][0:5], flask.session['end_time'].split('T')[1][0:5]))
     return flask.redirect(flask.url_for("choose"))
 
 @app.route('/setcalendar', methods=['POST'])
 def setcalendar():
     selected_calendars = request.form.getlist("calendars")
-    app.logger.debug(str(selected_calendars))
     credentials = valid_credentials()
     if not credentials:
       app.logger.debug("Redirecting to authorization")
@@ -407,9 +409,14 @@ def conflicting_events(events):
             event_end = arrow.get(event['end_date'].split('T')[1][0:8], 'HH:mm:ss')
             request_start = arrow.get(flask.session['begin_time'].split('T')[1][0:8], 'HH:mm:ss')
             request_end = arrow.get(flask.session['end_time'].split('T')[1][0:8], 'HH:mm:ss')
-            if event_start <= request_start and request_start < event_end:
+            #starts within pre-existing event
+            if event_start < request_start and request_start < event_end:
                 conflict.append(event)
-            elif event_start <= request_end and request_end < event_end:
+            #ends within pre-existing event
+            elif event_start < request_end and request_end < event_end:
+                conflict.append(event)
+            #pre-existing event happens within request
+            elif request_start < event_start and event_end < request_end:
                 conflict.append(event)
     return conflict
 
