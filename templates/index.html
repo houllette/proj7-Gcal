@@ -116,9 +116,11 @@
         <div class="row">
         {% for event in g.free_time %}
           <div class="col-xs-4">
-              Free Time: {{ event.date }}
+              Free Time
               <br />
-              {{ event.start_time }} - {{ event.end_time}}
+              {{ event.date }}
+              <br />
+              {{ event.output_start_time }} - {{ event.output_end_time}}
           </div>
           {% if loop.index is divisibleby 3 %}
         </div>

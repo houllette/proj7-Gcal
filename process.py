@@ -1,4 +1,5 @@
 import arrow
+import datetime
 
 def list_events(service, selected_calendars, user_defined_begin_date, user_defined_end_date):
     """
@@ -21,13 +22,17 @@ def list_events(service, selected_calendars, user_defined_begin_date, user_defin
 
                     if 'date' in event['start']:
                         start_date = "ALL DAY"
+                        output_start_time = start_date
                     else:
                         start_date = event['start']['dateTime']
+                        output_start_time = start_date.split('T')[1][0:5]
 
                     if 'date' in event['end']:
                         end_date = "ALL DAY"
+                        output_end_time = end_date
                     else:
                         end_date = event['end']['dateTime']
+                        output_end_time = end_date.split('T')[1][0:5]
 
                     if start_date.split('T')[0] != end_date.split('T')[0]:
                         output_date = start_date.split('T')[0] + " - " + end_date.split('T')[0]
@@ -40,8 +45,8 @@ def list_events(service, selected_calendars, user_defined_begin_date, user_defin
                     'desc': desc,
                     'start_date': start_date,
                     'end_date': end_date,
-                    'output_start_time': start_date.split('T')[1][0:5],
-                    'output_end_time': end_date.split('T')[1][0:5],
+                    'output_start_time': output_start_time,
+                    'output_end_time': output_end_time,
                     'output_date': output_date
                     })
           page_token = events_list.get("nextPageToken")
@@ -74,11 +79,124 @@ def conflicting_events(events, user_defined_begin_time, user_defined_end_time):
                 conflict.append(event)
     return conflict
 
+def list_blocking(selected_event_ids, blocking_events_list):
+    result = [ ]
+    for event_id in selected_event_ids:
+        for event in blocking_events_list:
+            if event['id'] == event_id:
+                result.append(event)
+    return result
+
 def condense_busytimes(events):
+    condensed = [ ]
+    for event in events:
+        #print("HERE "+ str(type(event)))
+        if event['start_date'] == "ALL DAY" or event['end_date'] == "ALL DAY":
+            condensed.append({
+            'date': event['output_date'],
+            'start_time': 'ALL DAY',
+            'end_time': 'ALL DAY'
+            })
+        else:
+            condensed.append({
+            'date': event['output_date'],
+            'start_time': arrow.get(event['start_date'].split('T')[1][0:8], 'HH:mm:ss'),
+            'end_time': arrow.get(event['end_date'].split('T')[1][0:8], 'HH:mm:ss')
+            })
+
+    return condensed
+
+def free_time(busytimes, user_defined_begin_time, user_defined_end_time, daterange):
+    '''
+    Given a list of busytimes, generates a list of free times that fall between
+    the time frame and returns the list
+    '''
+    free_times = [ ]
+    start_time = arrow.get(user_defined_begin_time.split('T')[1][0:8], 'HH:mm:ss')
+    end_time = arrow.get(user_defined_end_time.split('T')[1][0:8], 'HH:mm:ss')
+
+    current_date = '' #used in the loop
+    current_start_time = '' #used in the loop
+    for busytime in busytimes:
+        if busytime['start_time'] == "ALL DAY" or busytime['end_time'] == "ALL DAY":
+            continue
+        if busytime['date'] != current_date: #first event for a day
+            if current_start_time != '': #this is for a free_time block that may have been started due to time left over after previous day's last event
+                free_times.append({
+                'date': current_date,
+                'start_time': current_start_time,
+                'end_time': end_time,
+                'output_start_time': str(current_start_time).split('T')[1][0:5],
+                'output_end_time': str(end_time).split('T')[1][0:5]
+                })
+
+            current_date = busytime['date'] #reset so this doesnt happen again
+            if start_time < busytime['start_time']: #if there is some time before our first busytime
+                free_times.append({
+                'date': current_date,
+                'start_time': start_time,
+                'end_time': busytime['start_time'],
+                'output_start_time': str(start_time).split('T')[1][0:5],
+                'output_end_time': str(busytime['start_time']).split('T')[1][0:5]
+                })
+                if busytime['end_time'] < end_time:
+                    current_start_time = busytime['end_time']
+            else: #if there isnt any free time before first busytime
+                if busytime['end_time'] <= end_time: #check to make sure busytime isnt taking up entirity of our request range (and isnt marked all day i.e. request is from 9-12 and we have busytime from 8-1)
+                    current_start_time = busytime['end_time'] #start a new incomplete free_time block w/ counters outside of loop
+        else: #if the busytime currently being evaluated is within the same day as the last busytime.
+            if end_time <= busytime['start_time']: #closes free_time block if the next busytime is outside request range
+                free_times.append({
+                'date': current_date,
+                'start_time': current_start_time,
+                'end_time': end_time,
+                'output_start_time': str(current_start_time).split('T')[1][0:5],
+                'output_end_time': str(end_time).split('T')[1][0:5]
+                })
+                current_start_time = ''
+            else:
+                free_times.append({
+                'date': current_date,
+                'start_time': current_start_time,
+                'end_time': busytime['start_time'],
+                'output_start_time': str(current_start_time).split('T')[1][0:5],
+                'output_end_time': str(busytime['start_time']).split('T')[1][0:5]
+                })
+                current_start_time = ''
+
+            if busytime['end_time'] <= end_time: #if there is time after last busytime
+                current_start_time = busytime['end_time']
+
+    if current_start_time != '': #this is for a free_time block that may have been started due to time left over after previous day's last event
+        free_times.append({
+        'date': current_date,
+        'start_time': current_start_time,
+        'end_time': end_time,
+        'output_start_time': str(current_start_time).split('T')[1][0:5],
+        'output_end_time': str(end_time).split('T')[1][0:5]
+        })
+
+    end = datetime.datetime.strptime(daterange[2], "%m/%d/%Y").date()
+    begin = datetime.datetime.strptime(daterange[0], "%m/%d/%Y").date()
+    delta = end-begin
+    date_list = [str(end - datetime.timedelta(days=x)) for x in range(0, delta.days+1)]
+    date_used = { }
+    for date in date_list:
+        date_used[date] = False
+
+    for date in date_list:
+        for free_time in free_times:
+            if date == free_time['date']:
+                date_used[date] = True
+        if date_used[date] == False:
+            print(date)
+            free_times.append({
+            'date': date,
+            start_time: start_time,
+            end_time: end_time,
+            'output_start_time': str(start_time).split('T')[1][0:5],
+            'output_end_time': str(end_time).split('T')[1][0:5]
+            })
 
 
-    return #condensed list of busytimes
-
-def free_time(busytimes, start_time, end_time):
-    #need event.date, event.start_time, event.end_time
-    return #list of free times
+    return free_times

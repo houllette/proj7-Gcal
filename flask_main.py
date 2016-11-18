@@ -201,7 +201,7 @@ def setrange():
     flask.session['daterange'] = daterange
     daterange_parts = daterange.split()
     flask.session['begin_date'] = interpret_date(daterange_parts[0])
-    flask.session['end_date'] = interpret_date(daterange_parts[2])
+    flask.session['end_date'] = next_day(interpret_date(daterange_parts[2]))
 
     begin_time = interpret_time(request.form.get('begin_time'))
     end_time = interpret_time(request.form.get('end_time'))
@@ -224,22 +224,15 @@ def setcalendar():
 
     gcal_service = get_gcal_service(credentials)
     app.logger.debug("Returned from get_gcal_service")
-    flask.g.block = conflicting_events(list_events(gcal_service, selected_calendars, flask.session['begin_date'], flask.session['end_date']), flask.session['begin_time'], flask.session['end_time'])
+    busytimes = conflicting_events(list_events(gcal_service, selected_calendars, flask.session['begin_date'], flask.session['end_date']), flask.session['begin_time'], flask.session['end_time'])
+    flask.g.block = busytimes
+    flask.session['busytimes'] = busytimes
     return render_template('index.html')
 
 @app.route('/setblock', methods=['POST'])
 def setblock():
     selected_events = request.form.getlist('blocking_event')
-    '''
-    credentials = valid_credentials()
-    if not credentials:
-      app.logger.debug("Redirecting to authorization")
-      return flask.redirect(flask.url_for('oauth2callback'))
-
-    gcal_service = get_gcal_service(credentials)
-    app.logger.debug("Returned from get_gcal_service")
-    '''
-    flask.g.free_time = free_time(condense_busytimes(selected_events), flask.session['begin_time'], flask.session['end_time'])
+    flask.g.free_time = free_time(condense_busytimes(list_blocking(selected_events, flask.session['busytimes'])), flask.session['begin_time'], flask.session['end_time'], flask.session['daterange'].split())
     return render_template('index.html')
 
 ####
