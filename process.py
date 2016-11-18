@@ -29,11 +29,20 @@ def list_events(service, selected_calendars, user_defined_begin_date, user_defin
                     else:
                         end_date = event['end']['dateTime']
 
+                    if start_date.split('T')[0] != end_date.split('T')[0]:
+                        output_date = start_date.split('T')[0] + " - " + end_date.split('T')[0]
+                    else:
+                        output_date = start_date.split('T')[0]
+
                     result.append({
+                    'id': event['id'],
                     'summary': event['summary'],
                     'desc': desc,
                     'start_date': start_date,
-                    'end_date': end_date
+                    'end_date': end_date,
+                    'output_start_time': start_date.split('T')[1][0:5],
+                    'output_end_time': end_date.split('T')[1][0:5],
+                    'output_date': output_date
                     })
           page_token = events_list.get("nextPageToken")
           if not page_token:
@@ -64,3 +73,12 @@ def conflicting_events(events, user_defined_begin_time, user_defined_end_time):
             elif request_start < event_start and event_end < request_end:
                 conflict.append(event)
     return conflict
+
+def condense_busytimes(events):
+
+
+    return #condensed list of busytimes
+
+def free_time(busytimes, start_time, end_time):
+    #need event.date, event.start_time, event.end_time
+    return #list of free times

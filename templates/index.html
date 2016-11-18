@@ -15,7 +15,7 @@
   </head>
   <body>
     <div class="container">
-      <h1>Busy times</h1>
+      <h1>Meet-Up Times</h1>
       <br />
       <h3>Date range</h3>
       <form action="/setrange" method="post">
@@ -68,7 +68,7 @@
         <div class="row">
         {% for cal in g.calendars if cal.selected %}
           <div class="col-xs-4">
-            <input type="checkbox" name="calendars" value="{{ cal.id }}">
+            <input type="checkbox" name="calendar" value="{{ cal.id }}">
       	     {{ cal.summary }}
           </div>
           {% if loop.index is divisibleby 3 %}
@@ -82,11 +82,43 @@
       </form>
       {% endif %}
 
-      {% if g.events is defined  %}
+      {% if g.block is defined  %}
+      <br />
+      <h3>Busy Times</h3>
+      <b>Please unselect any times that can be moved</b>
+      <form action="/setblock" method="post">
         <div class="row">
-        {% for event in g.events %}
+        {% for event in g.block %}
           <div class="col-xs-4">
-      	     {{ event.summary }} : {{ event.desc }}
+            <input type="checkbox" name="blocking_event" value="{{ event.id }}" checked>
+      	     {{ event.summary }}
+             <br />
+             {{ event.output_date }}
+             <br />
+             {{ event.output_start_time }} - {{ event.output_end_time }}
+             <br />
+             {{ event.desc }}
+          </div>
+          {% if loop.index is divisibleby 3 %}
+        </div>
+        <div class="row">
+          {% endif %}
+        {% endfor %}
+        </div>
+        <br />
+        <input type="submit" value="Generate Free Times">
+      </form>
+      {% endif %}
+
+      {% if g.free_time is defined %}
+      <br />
+      <h3>Free Times</h3>
+        <div class="row">
+        {% for event in g.free_time %}
+          <div class="col-xs-4">
+              Free Time: {{ event.date }}
+              <br />
+              {{ event.start_time }} - {{ event.end_time}}
           </div>
           {% if loop.index is divisibleby 3 %}
         </div>
