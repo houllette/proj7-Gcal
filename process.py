@@ -89,8 +89,13 @@ def list_blocking(selected_event_ids, blocking_events_list):
 
 def condense_busytimes(events):
     condensed = [ ]
+    current_date = ''
+    current_start_time = ''
+    current_end_time = ''
     for event in events:
-        #print("HERE "+ str(type(event)))
+        print(str(event))
+        event_start = arrow.get(event['start_date'].split('T')[1][0:8], 'HH:mm:ss')
+        event_end = arrow.get(event['end_date'].split('T')[1][0:8], 'HH:mm:ss')
         if event['start_date'] == "ALL DAY" or event['end_date'] == "ALL DAY":
             condensed.append({
             'date': event['output_date'],
@@ -98,12 +103,44 @@ def condense_busytimes(events):
             'end_time': 'ALL DAY'
             })
         else:
-            condensed.append({
-            'date': event['output_date'],
-            'start_time': arrow.get(event['start_date'].split('T')[1][0:8], 'HH:mm:ss'),
-            'end_time': arrow.get(event['end_date'].split('T')[1][0:8], 'HH:mm:ss')
-            })
-
+            if current_date == '': #first run through
+                current_date = event['output_date']
+                current_start_time = event_start
+                current_end_time = event_end
+            elif event['output_date'] != current_date: #new day, so new chunk of time
+                #append what we have
+                condensed.append({
+                'date': current_date,
+                'start_time': current_start_time,
+                'end_time': current_end_time
+                })
+                current_date = event['output_date']
+                current_start_time = event_start
+                current_end_time = event_end
+            else: #not a new day
+                if event_start < current_start_time and current_start_time <= event_end:
+                    current_start_time = event_start
+                    if current_end_time < event_end:
+                        current_end_time = event_end
+                elif current_start_time < event_start and event_start <= current_end_time and current_end_time < event_end:
+                    current_end_time = event_end
+                elif current_start_time < event_start and event_end < current_end_time:
+                    continue
+                else:
+                    #append what we have
+                    condensed.append({
+                    'date': current_date,
+                    'start_time': current_start_time,
+                    'end_time': current_end_time
+                    })
+                    current_date = event['output_date']
+                    current_start_time = event_start
+                    current_end_time = event_end
+    condensed.append({
+    'date': current_date,
+    'start_time': current_start_time,
+    'end_time': current_end_time
+    })
     return condensed
 
 def free_time(busytimes, user_defined_begin_time, user_defined_end_time, daterange):
