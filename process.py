@@ -93,7 +93,6 @@ def condense_busytimes(events):
     current_start_time = ''
     current_end_time = ''
     for event in events:
-        print(str(event))
         event_start = arrow.get(event['start_date'].split('T')[1][0:8], 'HH:mm:ss')
         event_end = arrow.get(event['end_date'].split('T')[1][0:8], 'HH:mm:ss')
         if event['start_date'] == "ALL DAY" or event['end_date'] == "ALL DAY":
