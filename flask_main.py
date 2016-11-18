@@ -7,6 +7,9 @@ import uuid
 import json
 import logging
 
+#our own processing module
+from process import *
+
 # Date handling
 import arrow # Replacement for datetime, based on moment.js
 # import datetime # But we still need time
@@ -221,7 +224,7 @@ def setcalendar():
 
     gcal_service = get_gcal_service(credentials)
     app.logger.debug("Returned from get_gcal_service")
-    flask.g.events = conflicting_events(list_events(gcal_service, selected_calendars))
+    flask.g.events = conflicting_events(list_events(gcal_service, selected_calendars, flask.session['begin_date'], flask.session['end_date']), flask.session['begin_time'], flask.session['end_time'])
     return render_template('index.html')
 
 ####
@@ -337,7 +340,7 @@ def list_calendars(service):
             "primary": primary
             })
     return sorted(result, key=cal_sort_key)
-
+'''
 def list_events(service, selected_calendars):
     """
     Given a google 'service' object and list of selected calendars, return a list of
@@ -378,6 +381,7 @@ def list_events(service, selected_calendars):
           if not page_token:
             break
     return result
+'''
 
 def cal_sort_key( cal ):
     """
@@ -394,12 +398,12 @@ def cal_sort_key( cal ):
     else:
        primary_key = "X"
     return (primary_key, selected_key, cal["summary"])
-
+'''
 def conflicting_events(events):
-    '''
+
     Given a list of events, checks against user inputted time frame
     and returns list of events that fall between the requested time frame
-    '''
+
     conflict = [ ]
     for event in events:
         if event['start_date'] == "ALL DAY" or event['end_date'] == "ALL DAY":
@@ -419,6 +423,7 @@ def conflicting_events(events):
             elif request_start < event_start and event_end < request_end:
                 conflict.append(event)
     return conflict
+'''
 
 #################
 #
