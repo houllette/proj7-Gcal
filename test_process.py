@@ -23,9 +23,6 @@ def test_condense_busytimes():
 
     return
 
-def test_free_time():
-    return
-
 def adjust(events):
     for event in events:
         old_start = event['start_time']
