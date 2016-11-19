@@ -232,6 +232,7 @@ def setcalendar():
 @app.route('/setblock', methods=['POST'])
 def setblock():
     selected_events = request.form.getlist('blocking_event')
+    flask.g.block_two = flask.session['busytimes']
     flask.g.free_time = free_time(condense_busytimes(list_blocking(selected_events, flask.session['busytimes'])), flask.session['begin_time'], flask.session['end_time'], flask.session['daterange'].split())
     return render_template('index.html')
 
