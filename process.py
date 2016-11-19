@@ -150,12 +150,14 @@ def free_time(busytimes, user_defined_begin_time, user_defined_end_time, dateran
     free_times = [ ]
     start_time = arrow.get(user_defined_begin_time.split('T')[1][0:8], 'HH:mm:ss')
     end_time = arrow.get(user_defined_end_time.split('T')[1][0:8], 'HH:mm:ss')
-
     current_date = '' #used in the loop
     current_start_time = '' #used in the loop
     for busytime in busytimes:
         if busytime['start_time'] == "ALL DAY" or busytime['end_time'] == "ALL DAY":
             continue
+        if busytime['date'] == '' and busytime['start_time'] == '' and busytime['end_time'] == '':
+            continue
+
         if busytime['date'] != current_date: #first event for a day
             if current_start_time != '': #this is for a free_time block that may have been started due to time left over after previous day's last event
                 free_times.append({
@@ -225,7 +227,6 @@ def free_time(busytimes, user_defined_begin_time, user_defined_end_time, dateran
             if date == free_time['date']:
                 date_used[date] = True
         if date_used[date] == False:
-            print(date)
             free_times.append({
             'date': date,
             start_time: start_time,
